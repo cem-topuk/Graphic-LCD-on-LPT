@@ -3,7 +3,7 @@ This library is designed for graphic LCDs with the Toshiba T6963CFG LCD controll
 
 # LCD Parallel Port Connection
 
-Below, you can find the connections between LCD pins and LPT pins:
+LCD model used JCDISPLAY JM240128DC. Below, you can find the connections between LCD pins and LPT pins:
 
 - **LPT Pin 1 (STROBE) - LCD Pins 5 and 6:** Used for reading and writing data to the LCD. The STROBE signal connects to the RD and WR pins.
 
