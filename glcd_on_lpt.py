@@ -5,6 +5,11 @@ Description:
     through a parallel port (LPT). It provides the necessary functions to interact with and display 
     graphics on the LCD.
 
+License:
+    This library is licensed under the GNU General Public License, Version 3 (GPL-3.0). 
+    You can find a copy of the license in the 'LICENSE' file included with this software 
+    or online at https://www.gnu.org/licenses/gpl-3.0.html.
+
 Usage:
     1. Connect your Toshiba T6963CFG LCD to your computer's parallel port (LPT).
     2. Import this library into your Python project.
