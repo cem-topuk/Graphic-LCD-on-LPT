@@ -1,3 +1,24 @@
+"""
+Author: Cem Topuk
+Description: 
+    This Python library is designed for controlling graphic LCDs with the Toshiba T6963CFG controller
+    through a parallel port (LPT). It provides the necessary functions to interact with and display 
+    graphics on the LCD.
+
+Usage:
+    1. Connect your Toshiba T6963CFG LCD to your computer's parallel port (LPT).
+    2. Import this library into your Python project.
+    3. Create an instance of the 'LCD' class, e.g., 'lcd = glcd_on_lpt.LCD()'.
+    4. Use the methods provided by the 'lcd' object to draw graphics, text, and control the LCD.
+    5. Don't forget to clean up and release resources using 'cleanup()' when done.
+
+Note:
+    - This library assumes that you have the necessary hardware setup to interface with the LCD
+      via the parallel port. Make sure to check your connections and configurations.
+    - Please refer to the Toshiba T6963CFG controller's datasheet for more details on commands
+      and configuration settings.
+"""
+
 import parallel
 #import time
 
@@ -16,7 +37,6 @@ T6963CFG_OR_MODE =                     0x00
 T6963CFG_XOR_MODE =                    0x01
 T6963CFG_AND_MODE =                    0x03
 TEXT_ATTR_MODE =                       0x04
-
 
 T6963CFG_DISPLAY_MODE =                0x90
 T6963CFG_CURSOR_BLINK_ON =             0x01
@@ -166,7 +186,11 @@ class LCD:
         for i in range(0, GLCD_EXTERNAL_CG_CAPABILITY*8):
             self.GLCD_write(0, 0)
             self.GLCD_write(T6963CFG_DATA_WRITE_AND_INCREMENT, 1)
-
+    
+    def GLCD_char_CG(self, id):
+        self.GLCD_write(0x80 + id, 0)                           # Adjust standard ASCII to T6963CFG ASCII
+        self.GLCD_write(T6963CFG_DATA_WRITE_AND_INCREMENT, 1);  # '0x80 + id's range 0 to 255
+    
     def GLCD_clear_graphic(self):
         self.GLCD_write(GLCD_GRAPHIC_HOME & 0xFF, 0)
         self.GLCD_write(GLCD_GRAPHIC_HOME >> 8, 0)
@@ -184,6 +208,15 @@ class LCD:
         for char in text:
             self.GLCD_write_char(ord(char))
 
+    def GLCD_define_character(self, charCode, defChar):
+        address = GLCD_EXTERNAL_CG_HOME + (8 * charCode)
+        self.GLCD_write(int(address & 0xFF), 0)
+        self.GLCD_write(int(address >> 8), 0)
+        self.GLCD_write(T6963CFG_SET_ADDRESS_POINTER, 1)
+        for index in defChar:
+            self.GLCD_write(int(index & 0xFF), 0)
+            self.GLCD_write(T6963CFG_DATA_WRITE_AND_INCREMENT, 1)
+    
     def GLCD_set_cursor_pointer(self, x, y):
         self.GLCD_write(x, 0)
         self.GLCD_write(y, 0)
@@ -195,16 +228,16 @@ class LCD:
         self.GLCD_write(T6963CFG_SET_OFFSET_REGISTER, 1)
 
     def GLCD_set_address_pointer(self, x, y):
-        self.address = GLCD_TEXT_HOME +  x + (GLCD_TEXT_AREA * y)
-        self.GLCD_write(int(self.address & 0xFF), 0)
-        self.GLCD_write(int(self.address >> 8), 0)
+        address = GLCD_TEXT_HOME +  x + (GLCD_TEXT_AREA * y)
+        self.GLCD_write(int(address & 0xFF), 0)
+        self.GLCD_write(int(address >> 8), 0)
         self.GLCD_write(T6963CFG_SET_ADDRESS_POINTER, 1)
 
     def GLCD_set_pixel(self, x, y, color):
-        self.address = int(GLCD_GRAPHIC_HOME + (x / GLCD_FONT_WIDTH) + (GLCD_GRAPHIC_AREA * y))
+        address = int(GLCD_GRAPHIC_HOME + (x / GLCD_FONT_WIDTH) + (GLCD_GRAPHIC_AREA * y))
 
-        self.GLCD_write(int(self.address & 0x00FF), 0)
-        self.GLCD_write(int(self.address >> 8), 0)
+        self.GLCD_write(int(address & 0x00FF), 0)
+        self.GLCD_write(int(address >> 8), 0)
         self.GLCD_write(T6963CFG_SET_ADDRESS_POINTER, 1)
 
         self.GLCD_write(T6963CFG_DATA_READ_AND_NONVARIABLE, 1)
@@ -229,8 +262,7 @@ class LCD:
         #time.sleep(DELAY_TIME)
         self.p.setInitOut(1)        # LPT Pin 16  - LCD Pin 10          NOT Reset
 
-    def GLCD_draw_rectangle(self, x, y, b, a):
-        color = 1
+    def GLCD_draw_rectangle(self, x, y, b, a, color):
         for i in range(0, int(a)):
             self.GLCD_set_pixel(int(x), int(y+i), color)
             self.GLCD_set_pixel(int(x+b-1), int(y+i), color)
@@ -238,13 +270,12 @@ class LCD:
             self.GLCD_set_pixel(int(x+i), int(y), color)
             self.GLCD_set_pixel(int(x+i), int(y+a-1), color)
 
-    def GLCD_draw_circle(self, cx, cy ,radius):
+    def GLCD_draw_circle(self, cx, cy ,radius, color):
         x = int(radius)
         y = 0
         xchange = 1 - 2 * int(radius)
         ychange = 1
         radiusError = 0
-        color = 1
         while x >= y:
             self.GLCD_set_pixel(int(cx)+x, int(cy)+y, color)
             self.GLCD_set_pixel(int(cx)-x, int(cy)+y, color)
@@ -262,8 +293,7 @@ class LCD:
                 radiusError += xchange
                 xchange += 2
 
-    def GLCD_draw_line(self, x1, y1, x2, y2):
-        color = 1
+    def GLCD_draw_line(self, x1, y1, x2, y2, color):
         TwoDxAccumulatedError = 0
         TwoDyAccumulatedError = 0
 
