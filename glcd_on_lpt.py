@@ -105,32 +105,40 @@ class LCD:
         self.p.setData(0)
         self.p.setInitOut(1)        # LPT Pin 16  - LCD Pin 10          NOT Reset
 
+        self.check_status()
         self.GLCD_write(int(GLCD_TEXT_HOME & 0xFF), 0)
         self.GLCD_write(int(GLCD_TEXT_HOME >> 8), 0)
         self.GLCD_write(T6963CFG_SET_TEXT_HOME_ADDRESS, 1)
 
+        self.check_status()
         self.GLCD_write(GLCD_TEXT_AREA, 0)
         self.GLCD_write(0, 0)
         self.GLCD_write(T6963CFG_SET_TEXT_AREA, 1)
 
+        self.check_status()
         self.GLCD_write(int(GLCD_GRAPHIC_HOME & 0x00FF), 0)
         self.GLCD_write(int(GLCD_GRAPHIC_HOME >> 8), 0)
         self.GLCD_write(T6963CFG_SET_GRAPHIC_HOME_ADDRESS, 1)
 
+        self.check_status()
         self.GLCD_write(GLCD_GRAPHIC_AREA, 0)
         self.GLCD_write(0, 0)
         self.GLCD_write(T6963CFG_SET_GRAPHIC_AREA, 1)
 
+        self.check_status()
         self.GLCD_write(GLCD_OFFSET_REGISTER, 0)
         self.GLCD_write(0, 0)
         self.GLCD_write(T6963CFG_SET_OFFSET_REGISTER, 1)
 
+        self.check_status()
         self.GLCD_write(0, 0)
         self.GLCD_write(0, 0)
         self.GLCD_write(T6963CFG_SET_ADDRESS_POINTER, 1)
 
+        self.check_status()
         self.GLCD_write(T6963CFG_DISPLAY_MODE  | T6963CFG_GRAPHIC_DISPLAY_ON   | T6963CFG_TEXT_DISPLAY_ON , 1)#| T6963CFG_CURSOR_DISPLAY_ON, 1)
 
+        self.check_status()
         self.GLCD_write(T6963CFG_MODE_SET | T6963CFG_OR_MODE, 1)
 
     def check_status(self):
@@ -153,7 +161,6 @@ class LCD:
         #time.sleep(DELAY_TIME)
 
     def GLCD_write(self, data, c_d):    # If c_d is 1, it is command mode, and 0 is data mode.
-        self.check_status()
         self.p.setDataDir(1)        # Write Mode
         self.p.setAutoFeed(c_d)     # LPT Pin 14 - LCD Pin 8            C/Not D
         self.p.setDataStrobe(1)     # LPT Pin 1 - LCD Pin 5 and 6       W/Not R
