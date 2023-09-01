@@ -9,7 +9,7 @@ __LCD model used JCDISPLAY JM240128DC__. Below, you can find the connections bet
 
 - **RD Pin (LCD Pin 5):** The STROBE signal is directly connected to LPT Pin 1 (STROBE).
 
-- **WR Pin (LCD Pin 6):** The WR pin is connected to the Collector pin of an NPN transistor. This transistor creates a NOT gate, enabling the reverse of the RD signal to be sent to the WR pin (LCD Pin 6). This ensures proper write (WR) and read (RD) operations on the LCD.
+- **WR Pin (LCD Pin 6):** The WR pin is connected to the Collector pin of an NPN transistor. This transistor creates a NOT gate, enabling the reverse of the RD signal to be sent to the WR pin. This ensures proper write (WR) and read (RD) operations on the LCD.
 
 - **LPT Pins 2-9 (DATA) - LCD Pins D0-D7:** An 8-bit data bus used to transmit data to the LCD.
 
