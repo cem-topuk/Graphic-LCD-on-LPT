@@ -161,6 +161,7 @@ class LCD:
         #time.sleep(DELAY_TIME)
 
     def GLCD_write(self, data, c_d):    # If c_d is 1, it is command mode, and 0 is data mode.
+        #self.check_status()
         self.p.setDataDir(1)        # Write Mode
         self.p.setAutoFeed(c_d)     # LPT Pin 14 - LCD Pin 8            C/Not D
         self.p.setDataStrobe(1)     # LPT Pin 1 - LCD Pin 5 and 6       W/Not R
@@ -283,74 +284,91 @@ class LCD:
             self.GLCD_set_pixel(int(x+i), int(y+a-1), color)
 
     def GLCD_draw_circle(self, cx, cy ,radius, color):
-        x = int(radius)
-        y = 0
-        xchange = 1 - 2 * int(radius)
-        ychange = 1
-        radiusError = 0
-        while x >= y:
-            self.GLCD_set_pixel(int(cx)+x, int(cy)+y, color)
-            self.GLCD_set_pixel(int(cx)-x, int(cy)+y, color)
-            self.GLCD_set_pixel(int(cx)-x, int(cy)-y, color)
-            self.GLCD_set_pixel(int(cx)+x, int(cy)-y, color)
-            self.GLCD_set_pixel(int(cx)+y, int(cy)+x, color)
-            self.GLCD_set_pixel(int(cx)-y, int(cy)+x, color)
-            self.GLCD_set_pixel(int(cx)-y, int(cy)-x, color)
-            self.GLCD_set_pixel(int(cx)+y, int(cy)-x, color)
-            y += 1
-            radiusError += ychange
-            ychange += 2
-            if 2 * radiusError + xchange > 0:
-                x -= 1
-                radiusError += xchange
-                xchange += 2
+        self.x = int(radius)
+        self.y = 0
+        self.xchange = 1 - 2 * int(radius)
+        self.ychange = 1
+        self.radiusError = 0
+        while self.x >= self.y:
+            self.GLCD_set_pixel(int(cx) + self.x, int(cy) + self.y, color)
+            self.GLCD_set_pixel(int(cx) - self.x, int(cy) + self.y, color)
+            self.GLCD_set_pixel(int(cx) - self.x, int(cy) - self.y, color)
+            self.GLCD_set_pixel(int(cx) + self.x, int(cy) - self.y, color)
+            self.GLCD_set_pixel(int(cx) + self.y, int(cy) + self.x, color)
+            self.GLCD_set_pixel(int(cx) - self.y, int(cy) + self.x, color)
+            self.GLCD_set_pixel(int(cx) - self.y, int(cy) - self.x, color)
+            self.GLCD_set_pixel(int(cx) + self.y, int(cy) - self.x, color)
+            self.y += 1
+            self.radiusError += self.ychange
+            self.ychange += 2
+            if 2 * self.radiusError + self.xchange > 0:
+                self.x -= 1
+                self.radiusError += self.xchange
+                self.xchange += 2
 
     def GLCD_draw_line(self, x1, y1, x2, y2, color):
-        TwoDxAccumulatedError = 0
-        TwoDyAccumulatedError = 0
+        self.tmp = 0
+        self.x = 0
+        self.y = 0
+        self.dx = 0
+        self.dy = 0
+        self.err = 0
+        self.ystep = 0
+        self.swapxy = 0
 
-        Dx = int(x2-x1)
-        Dy = int(y2-y1)
+        if x1 > x2:
+            self.dx = x1 - x2
+        else: 
+            self.dx = x2 - x1
+        if y1 > y2:
+            self.dy = y1 - y2
+        else:
+            self.dy = y2 - y1
 
-        TwoDx = int(Dx + Dx)
-        TwoDy = int(Dy + Dy)
+        if self.dy > self.dx:
+            self.swapxy = 1
+            self.tmp = self.dx
+            self.dx = self.dy
+            self.dy = self.tmp
+            self.tmp = x1
+            x1 =y1
+            y1 = self.tmp
+            self.tmp = x2
+            x2 = y2
+            y2 = self.tmp
+        if x1 > x2:
+            self.tmp = x1
+            x1 =x2
+            x2 = self.tmp
+            self.tmp = y1
+            y1 =y2
+            y2 = self.tmp
+            
+        self.err = self.dx >> 1
+        if y2 > y1:
+            self.ystep = 1
+        else:
+            self.ystep = -1
+        self.y = y1
 
-        CurrentX = int(x1)
-        CurrentY = int(y1)
-
-        Xinc = 1
-        Yinc = 1
-
-        if Dx < 0:
-            Xinc = -1
-            Dx = -Dx
-            TwoDx = -TwoDx
-
-        if Dy < 0:
-            Yinc = -1
-            Dy = -Dy
-            TwoDy = -TwoDy
-
-        self.GLCD_set_pixel(int(x1), int(y1), color)
-
-        if Dx != 0 and Dy != 0:
-
-            if Dy <= Dx:
-                TwoDxAccumulatedError = 0
-                while CurrentX != x2:
-                    CurrentX += Xinc
-                    TwoDxAccumulatedError += TwoDy
-                    if TwoDxAccumulatedError > Dx:
-                        CurrentY += Yinc
-                        TwoDxAccumulatedError -= TwoDx
-                    self.GLCD_set_pixel(CurrentX, CurrentY, color)
+        for x in range(x1, x2+1):
+            if self.swapxy == 0:
+                self.GLCD_set_pixel(x, self.y, color)
             else:
-                TwoDyAccumulatedError = 0
-                while CurrentY != y2:
-                    CurrentY += Yinc
-                    TwoDyAccumulatedError += TwoDx
-                    if TwoDyAccumulatedError > Dy:
-                        CurrentX += Xinc
-                        TwoDyAccumulatedError -= TwoDy
-                    self.GLCD_set_pixel(CurrentX, CurrentY, color)
+                self.GLCD_set_pixel(self.y, x, color)
+            self.err -= int(self.dy)
+            if self.err < 0:
+                self.y += int(self.ystep)
+                self.err += int(self.dx)
 
+    def GLCD_draw_Hline(self, x, y, w, color):
+        while w >= 0:
+            self.GLCD_set_pixel(x, y, color)
+            w-=1
+            x+=1
+
+    def GLCD_draw_Vline(self, x, y, w, color):
+        while w >= 0:
+            self.GLCD_set_pixel(x, y, color)
+            w-=1
+            y+=1
