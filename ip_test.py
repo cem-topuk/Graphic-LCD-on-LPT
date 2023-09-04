@@ -25,7 +25,7 @@ class LINUX_sys:
         if ip_address:
             return ip_address
         else:
-            return '0'
+            return "Unable to read IP address"
         
 if __name__ == "__main__":
     lcd = glol.LCD()
@@ -36,18 +36,25 @@ if __name__ == "__main__":
     print(f"{ip_address}")
     
     # Draw some graphics
-    lcd.GLCD_draw_rectangle((240/2)-50, (128/2)-50, 100, 100)
-    lcd.GLCD_draw_circle(240/2, 128/2, 45)
-    lcd.GLCD_draw_line(0, 0, 240, 128)
-    lcd.GLCD_draw_line(0, 128, 240, 0)
+    lcd.GLCD_draw_rectangle((240/2)-50, (128/2)-50, 100, 100, 1)
+    lcd.GLCD_draw_circle(240/2, 128/2, 45, 1)
+    lcd.GLCD_draw_line(0, 0, 240, 128, 1)
+    lcd.GLCD_draw_line(0, 128, 240, 0, 1)
 
-    time.sleep(2)
+    for s in range(10, 100, 10):
+        lcd.GLCD_draw_Hline(10, s, 50, 1)
+        lcd.GLCD_draw_Vline(s, 10, 50, 1)
+        lcd.GLCD_draw_line(0, s+5, 240, s+5, 1)
+        lcd.GLCD_draw_line(s+5, 0, s+5, 128, 1)
+
+    time.sleep(3)
     lcd.GLCD_clear_graphic()
+    lcd.GLCD_set_address_pointer(0, 0)
+    lcd.GLCD_write_string("###Hello, LCD!***")
+    time.sleep(2)
+    lcd.GLCD_clear_text()
     lcd.GLCD_set_address_pointer(0, 1)
     lcd.GLCD_write_string(f'LAN IP: {ip_address}')
-    #time.sleep(2)
-    #lcd.GLCD_set_address_pointer(0, 0)
-    #lcd.GLCD_write_string("###Hello, LCD!***")
     #time.sleep(2)
     #lcd.GLCD_clear_text()
     """
